@@ -1,0 +1,120 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+' --- Styling Avancé pour la lisibilité ---
+skinparam usecase {
+    BackgroundColor<<AuthRequired>> HoneyDew
+    BorderColor<<AuthRequired>> DarkGreen
+    
+    BackgroundColor<<Public>> White
+    BorderColor<<Public>> Black
+}
+
+' --- Légende Explicative ---
+legend right
+  <b>Légende : Sécurité</b>
+  | <#HoneyDew>   | <b>Cas d'utilisation Sécurisé</b>\n(Nécessite authentification & Token JWT) |
+  | <#White>      | <b>Accès Public</b>\n(Visiteur ou Login) |
+endlegend
+
+' --- Définition des Acteurs ---
+actor "Visiteur" as Visitor
+actor "Utilisateur Authentifié" as User <<Abstract>>
+actor "Administrateur" as Admin
+actor "Professeur" as Prof
+actor "Étudiant" as Student
+actor "GitHub API" as GitHub <<System>>
+actor "Docker Engine" as Docker <<System>>
+
+User <|-- Prof
+User <|-- Student
+User <|-- Admin
+
+rectangle "CommitEd Platform" {
+
+  ' --- 1. MAINTENANCE (Haut du diagramme) ---
+  package "Back-Office Admin" {
+    usecase "Gérer les Utilisateurs\n(Valider/Bannir)" as ManageUsers <<AuthRequired>>
+    note top of ManageUsers
+      <b>Note :</b> Cycle <b>CRUD complet</b>
+      et <b>Archivage</b>.
+    end note
+    usecase "Surveiller les Logs Système" as MonitorSystem <<AuthRequired>>
+  }
+
+  ' --- 2. ACCÈS (Entrée commune) ---
+  package "Gestion d'Accès" {
+    usecase "Créer un Compte" as Register <<Public>>
+    usecase "S'authentifier (JWT)" as Auth <<Public>>
+    usecase "Gérer son Profil" as ManageProfile <<AuthRequired>>
+    note bottom of ManageProfile
+      <b>Note :</b> Consultation et
+      modification (Avatar, Pass).
+    end note
+  }
+
+  ' --- 3. COMMUN (Juste après l'accès pour centrer l'acteur User) ---
+  package "Espace Classe & Communication" {
+    usecase "Consulter le Flux de la Classe\n(Annonces, Fichiers)" as ViewClassContent <<AuthRequired>>
+    usecase "Télécharger Ressources" as DownloadFiles <<AuthRequired>>
+  }
+
+  ' --- 4. CŒUR MÉTIER : PROFESSEUR ---
+  package "Administration Pédagogique" {
+    usecase "Gérer les Classes\n(Créer, Clôturer)" as ManageClass <<AuthRequired>>
+    note top of ManageClass
+      <b>Note :</b> Cycle <b>CRUD complet</b>
+      et <b>Archivage</b> (Clôture).
+    end note
+    usecase "Configurer un Devoir\n(Lier Template Git)" as CreateAssignment <<AuthRequired>>
+    usecase "Correction Manuelle\n(Fallback)" as ManualGrade <<AuthRequired>>
+    usecase "Analyser Difficulté\n(Prédiction ML)" as Predict <<AuthRequired>>
+    note bottom of Predict
+      <b>IA Interne :</b> Service Analytics (.NET)
+      et modèles prédictifs (Python).
+    end note
+  }
+
+  ' --- 5. CŒUR MÉTIER : ÉTUDIANT ---
+  package "Workflow Étudiant" {
+    usecase "Rejoindre une Classe\n(Via Code)" as JoinClass <<AuthRequired>>
+    usecase "Démarrer un Devoir\n(Fork Automatique)" as StartAssignment <<AuthRequired>>
+    usecase "Soumettre Code\n(Push Detection)" as Submit <<AuthRequired>>
+    usecase "Consulter Feedback\n(Rapport CI/CD)" as ViewFeedback <<AuthRequired>>
+    note bottom of ViewFeedback
+      <b>Intelligence :</b> Analyse statique
+      et tests unitaires.
+    end note
+  }
+
+  ' --- 6. MOTEUR INTERNE ---
+  usecase "Exécution Sandbox" as Sandbox <<AuthRequired>>
+}
+
+' --- Relations ---
+Visitor --> Register
+Register ..> Auth : <<extend>> 
+User --> Auth
+User --> ManageProfile
+User --> ViewClassContent
+User --> DownloadFiles
+
+Admin --> ManageUsers
+Admin --> MonitorSystem
+
+Prof --> ManageClass
+Prof --> CreateAssignment
+Prof --> ManualGrade
+Prof --> Predict
+
+Student --> JoinClass
+Student --> StartAssignment
+Student --> Submit
+Student --> ViewFeedback
+
+StartAssignment ..> GitHub : <<API: Fork>>
+Submit ..> Sandbox : <<include>>
+Sandbox ..> GitHub : <<API: Clone>>
+Sandbox ..> Docker : <<Run Container>>
+@enduml

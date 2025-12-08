@@ -8,3 +8,6 @@
 
 #pagebreak()
 #include "03-besoins.typ"
+
+#pagebreak()
+#include "04-use-case.typ"

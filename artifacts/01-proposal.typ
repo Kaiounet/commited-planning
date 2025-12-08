@@ -38,7 +38,7 @@ Nous avons opté pour une architecture *Micro-services* afin de découpler les r
 L'architecture globale est illustrée dans la @architecture.
 
 #figure(
-  image("/images/microservice-architecture-style.webp", width: 90%),
+  image("/assets/images/microservice-architecture-style.webp", width: 90%),
   caption: [Diagramme d'Architecture Micro-services],
 ) <architecture>
 
